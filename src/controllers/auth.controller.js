@@ -41,6 +41,8 @@ export const signupController = async (req, res) => {
     // Numerical 6-digit OTP is cleaner, but if you want UUID substring:
     const otp = uuidv4().slice(0, 6).toUpperCase();
 
+    console.log("email", email)
+
     // Send Verification Email
     const transporter = createTransporter();
     await transporter.sendMail({
@@ -74,6 +76,8 @@ export const otpController = async (req, res) => {
   try {
     const { email, otp } = req.body;
 
+    console.log("body", req.body)
+
     if (!email || !otp) {
       return res.status(400).json({ message: "Required fields are missing!", status: false });
     }
@@ -94,8 +98,164 @@ export const otpController = async (req, res) => {
   }
 };
 
+
 // ==========================================
-// 3. LOGIN CONTROLLER
+// 3. reset-opt CONTROLLER
+// ==========================================
+
+export const resetOtpController = async (req , res)=>{
+
+    try {
+        const {email} = req.body
+
+        if(!email){
+
+            return res.status(400).json({
+                message: "required fields are missing!"
+            })
+        }
+
+        const user = await UserModel.findOne({email})
+        console.log("user",user)
+
+        if(!user){
+           return res.status(401).json({
+                message: "unauthorize access!"
+            })
+        }
+
+
+         const otp = uuidv4().slice(0, 6);
+
+    // console.log("otp", otp);
+
+    // send verify email
+    const transporter = nodemailer.createTransport({
+      service: "Gmail",
+      host: "smtp.gmail.com",
+      port: 465,
+      secure: true,
+      auth: {
+        user: process.env.EMAIL,
+        pass: process.env.PASSWORD,
+      },
+    });
+
+    transporter.sendMail({
+      subject: "resend otp on email",
+      from: process.env.EMAIL,
+      to: email,
+
+      html: `
+    
+   <!doctype html>
+<html lang="en">
+
+<head>
+<meta charset="UTF-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1.0" />
+<title>OTP Verification</title>
+
+<style>
+  body {
+    margin: 0;
+    padding: 0;
+    background: #f5f6fa;
+    font-family: Arial, Helvetica, sans-serif;
+  }
+
+  .container {
+    max-width: 480px;
+    margin: 40px auto;
+    background: #ffffff;
+    border-radius: 10px;
+    padding: 28px;
+    box-shadow: 0 4px 12px rgba(0,0,0,0.08);
+  }
+
+  h2 {
+    margin: 0 0 10px;
+    font-size: 20px;
+    color: #222;
+  }
+
+  p {
+    color: #555;
+    font-size: 14px;
+    line-height: 1.5;
+  }
+
+  .otp-btn {
+    display: inline-block;
+    margin: 20px 0;
+    padding: 14px 26px;
+    background: #4a6cf7;
+    color: #ffffff;
+    font-size: 22px;
+    font-weight: bold;
+    border-radius: 8px;
+    text-decoration: none;
+    letter-spacing: 4px;
+  }
+
+  .footer {
+    margin-top: 20px;
+    text-align: center;
+    color: #999;
+    font-size: 12px;
+  }
+</style>
+</head>
+
+<body>
+
+<div class="container">
+  <h2>Hello ${user.name}</h2>
+
+  <p>Your OTP code for verifying your request at <b>@dz Solutions</b> is shown below.  
+  This code is valid for 10mins minutes.</p>
+
+  <!-- OTP BUTTON -->
+  <a class="otp-btn">${otp}</a>
+
+  <p>If you didn’t request this operation, you can safely ignore this message.</p>
+
+  <div class="footer">
+    © ${new Date().getFullYear()}  @dz Solutions
+  </div>
+</div>
+
+</body>
+</html>
+
+
+    
+    `,
+    });
+
+    const otpObj = {
+      email,
+      otp,
+    };
+    await OtpModel.create(otpObj);
+
+    // otp reset
+    return res.json({
+      message: "RESET OTP SUCCESSFULLY",
+      stats: true,
+    });
+     
+
+
+
+        
+    } catch (error) {
+        
+    }
+}
+
+// ==========================================
+// 4. LOGIN CONTROLLER
 // ==========================================
 export const loginController = async (req, res) => {
   try {
@@ -141,7 +301,7 @@ export const loginController = async (req, res) => {
 };
 
 // ==========================================
-// 4. FORGET PASSWORD CONTROLLER
+// 5. FORGET PASSWORD CONTROLLER
 // ==========================================
 export const forgetPassController = async (req, res) => {
   try {
@@ -181,11 +341,17 @@ export const forgetPassController = async (req, res) => {
 };
 
 // ==========================================
-// 5. CHANGE PASSWORD CONTROLLER
+// 6. CHANGE PASSWORD CONTROLLER
 // ==========================================
 export const changePassController = async (req, res) => {
   try {
-    const { token, newPassword } = req.body;
+    const {newPassword } = req.body;
+
+    const token = req.headers.authorization.split(" ")[1]
+    // console.log("token", token)
+
+
+    
 
     if (!token || !newPassword) {
       return res.status(400).json({ message: "Required fields are missing!", status: false });
@@ -193,6 +359,7 @@ export const changePassController = async (req, res) => {
 
     // jwt.verify automatically throws error if token is expired or altered
     const verifyToken = jwt.verify(token, process.env.SECRET_KEY);
+    // console.log("verifyToken",verifyToken )
 
     if (!verifyToken.email || !verifyToken.id) {
       return res.status(400).json({ message: "Invalid token structure", status: false });
@@ -200,6 +367,7 @@ export const changePassController = async (req, res) => {
 
     const hashPassword = await bcrypt.hash(newPassword, 10);
     await UserModel.findByIdAndUpdate(verifyToken.id, { password: hashPassword });
+    // console.log("hashpassword",hashPassword )
 
     return res.status(200).json({ message: "Password changed successfully!", status: true });
   } catch (error) {

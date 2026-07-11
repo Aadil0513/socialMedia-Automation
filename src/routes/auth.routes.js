@@ -4,7 +4,7 @@ import {
   loginController, 
   signupController, 
   otpController, 
-//   resetController, 
+  resetOtpController, 
   forgetPassController, 
   changePassController 
 } from "../controllers/auth.controller.js"; 
@@ -13,7 +13,7 @@ export const authRoute = express.Router();
 
 authRoute.post("/signup", signupController);
 authRoute.post("/otp-verify", otpController);
-// authRoute.post("/reset-otp", resetController);
+authRoute.post("/reset-otp", resetOtpController);
 authRoute.post("/login", loginController);
 authRoute.post("/forget-password", forgetPassController);
 authRoute.post("/change-password", changePassController);

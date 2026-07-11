@@ -4,6 +4,7 @@ import nodemailer from "nodemailer";
 import bcrypt from "bcrypt";
 import { v4 as uuidv4 } from "uuid";
 import jwt from "jsonwebtoken";
+import { SessionModel } from "../models/session.model.js";
 
 // Reusable Transporter Logic
 const createTransporter = () => {
@@ -41,7 +42,7 @@ export const signupController = async (req, res) => {
     // Numerical 6-digit OTP is cleaner, but if you want UUID substring:
     const otp = uuidv4().slice(0, 6).toUpperCase();
 
-    console.log("email", email)
+    // console.log("email", email)
 
     // Send Verification Email
     const transporter = createTransporter();
@@ -76,7 +77,7 @@ export const otpController = async (req, res) => {
   try {
     const { email, otp } = req.body;
 
-    console.log("body", req.body)
+    // console.log("body", req.body)
 
     if (!email || !otp) {
       return res.status(400).json({ message: "Required fields are missing!", status: false });
@@ -281,6 +282,17 @@ export const loginController = async (req, res) => {
 
     const token = jwt.sign({ id: user._id }, process.env.SECRET_KEY, { expiresIn: "24h" });
 
+
+
+// Database mein session save karein
+await SessionModel.create({
+  userId: user._id,
+  token: token,
+  deviceInfo: req.headers["user-agent"] || "Unknown Device", // Yeh automatically device ki details nikal leta hai
+});
+
+
+
     // FIX: Hashed password completely removed from response data object
     const userData = {
       id: user._id,
@@ -347,8 +359,14 @@ export const changePassController = async (req, res) => {
   try {
     const {newPassword } = req.body;
 
-    const token = req.headers.authorization.split(" ")[1]
-    // console.log("token", token)
+    
+    const authHeader = req.headers.authorization;
+    if (!authHeader || !authHeader.startsWith("Bearer ")) {
+      return res.status(401).json({ message: "Reset token is missing or invalid!", status: false });
+    }
+
+    // 2. Agar header hai, to ab safe tareeqe se split karein
+    const token = authHeader.split(" ")[1];
 
 
     
@@ -372,5 +390,31 @@ export const changePassController = async (req, res) => {
     return res.status(200).json({ message: "Password changed successfully!", status: true });
   } catch (error) {
     return res.status(401).json({ message: "Token expired or invalid link!", status: false });
+  }
+};
+
+
+
+
+// ==========================================
+// 7. logoutController CONTROLLER
+// ==========================================
+
+
+export const logoutController = async (req, res) => {
+  try {
+   
+
+    // ❌ Poore user ke sessions delete nahi karne!
+    //  Sirf is specific device ka token database se urhana hai:
+    const deletedSession = await SessionModel.findOneAndDelete({ token: token });
+
+    if (!deletedSession) {
+      return res.status(404).json({ message: "Session already expired or invalid", status: false });
+    }
+
+    return res.status(200).json({ message: "Logged out from this device successfully!", status: true });
+  } catch (error) {
+    return res.status(500).json({ message: error.message, status: false });
   }
 };

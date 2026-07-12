@@ -1,13 +1,14 @@
 // src/app.js
+import "dotenv/config";
 import express from 'express';
 import cookieParser from 'cookie-parser';
 import cors from 'cors';
-import dotenv from 'dotenv';
+// import dotenv from 'dotenv';
 import { mongoDB } from './config/db.js';
 import { authRoute } from "./routes/auth.routes.js";
 
 // Load environment variables
-dotenv.config();
+// dotenv.config();
 
 const app = express();
 const PORT = process.env.PORT || 5000;

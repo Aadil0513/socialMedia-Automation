@@ -37,3 +37,5 @@ app.use("/api/v1/auth", authRoute);
 app.listen(PORT, () => {
   console.log(`Server is running on http://localhost:${PORT}`);
 });
+
+export default app;

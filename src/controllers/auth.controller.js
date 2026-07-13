@@ -317,7 +317,8 @@ await SessionModel.create({
 // ==========================================
 export const forgetPassController = async (req, res) => {
   try {
-    const { email } = req.body;
+    // const { email } = req.body;
+    console.log("email", email)
 
     if (!email) {
       return res.status(400).json({ message: "Email is required!", status: false });
@@ -404,7 +405,8 @@ export const changePassController = async (req, res) => {
 export const logoutController = async (req, res) => {
   try {
    
-
+  const token = req.token
+  console.log("token", token)
     // ❌ Poore user ke sessions delete nahi karne!
     //  Sirf is specific device ka token database se urhana hai:
     const deletedSession = await SessionModel.findOneAndDelete({ token: token });

@@ -3,7 +3,7 @@ import { Strategy as GoogleStrategy } from "passport-google-oauth20";
 import { UserModel } from "../models/user.model.js";
 
 
-console.log("My Google ID is:", process.env.GOOGLE_CLIENT_ID);
+// console.log("My Google ID is:", process.env.GOOGLE_CLIENT_ID);
 passport.use(
   new GoogleStrategy(
     {

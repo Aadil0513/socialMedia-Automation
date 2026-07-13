@@ -7,7 +7,8 @@ import {
   resetOtpController, 
   forgetPassController, 
   changePassController ,
-  logoutController
+  logoutController,
+  logoutAllDevicesController
 } from "../controllers/auth.controller.js"; 
 import passport from "passport";
 
@@ -25,7 +26,8 @@ authRoute.post("/reset-otp", resetOtpController);
 authRoute.post("/login", loginController);
 authRoute.post("/forget-password", forgetPassController);
 authRoute.post("/change-password", changePassController);
-authRoute.post("/logout" ,protectRoute,logoutController)
+authRoute.post("/logout" ,protectRoute,logoutController);
+authRoute.post("/logout-all", protectRoute, logoutAllDevicesController);
 
 
 

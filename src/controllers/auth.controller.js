@@ -420,3 +420,26 @@ export const logoutController = async (req, res) => {
     return res.status(500).json({ message: error.message, status: false });
   }
 };
+
+
+
+export const logoutAllDevicesController = async (req, res) => {
+  try {
+    // 1. protectRoute middleware ne user ka data req.user mein attach kiya hoga
+    const userId = req.user?._id || req.user?.id; 
+
+    if (!userId) {
+      return res.status(401).json({ message: "User context not found", status: false });
+    }
+
+    // 2. Database se is user ke SAARE sessions delete kar dein
+    const result = await SessionModel.deleteMany({ userId: userId });
+
+    return res.status(200).json({ 
+      message: `Logged out successfully from all devices! Total ${result.deletedCount} sessions cleared.`, 
+      status: true 
+    });
+  } catch (error) {
+    return res.status(500).json({ message: error.message, status: false });
+  }
+};

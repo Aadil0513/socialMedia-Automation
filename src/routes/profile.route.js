@@ -1,7 +1,7 @@
 import express from "express";
 import fs from "fs";
 import { protectRoute } from "../middlewares/auth.middleware.js"; // Existing common auth middleware
-import { upload } from "../middleware/multerMiddleware.js"; // Aapka multer configuration middleware
+import { upload } from "../middlewares/multerMiddleware.js"; // Aapka multer configuration middleware
 import { cloudinaryUploader } from "../config/cloudinary.js"; // Cloudinary config uploader
 import { UserModel } from "../models/user.model.js";
 

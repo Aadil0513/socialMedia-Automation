@@ -7,6 +7,7 @@ import cors from 'cors';
 import { mongoDB } from './config/db.js';
 import { authRoute } from "./routes/auth.routes.js";
 import {profileRoute} from "./routes/profile.route.js"
+import {socailMedia}  from "./routes/soicalMedia.routes.js"
 // Load environment variables
 // dotenv.config();
 
@@ -34,6 +35,9 @@ app.use((err, req, res, next) => {
 
 app.use("/api/v1/auth", authRoute);
 app.use("/api/v1/profile", profileRoute);
+app.use("/api/v1/social",socailMedia)
+app.use("/api/v1/youtube",socailMedia)
+
 
 app.listen(PORT, () => {
   console.log(`Server is running on http://localhost:${PORT}`);

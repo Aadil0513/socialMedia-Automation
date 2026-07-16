@@ -120,3 +120,91 @@ export const youtubeCallback = async (req, res) => {
     });
   }
 };
+
+
+
+// upload video on youtube 
+
+import fs from 'fs';
+
+export const uploadVideo = async (req, res) => {
+  const userId = req.user._id; // JWT se logged-in user ki ID
+  const { title, description, tags, privacyStatus } = req.body;
+
+  // File Validation
+  if (!req.file) {
+    return res.status(400).json({ success: false, message: "Please upload a video file." });
+  }
+
+  const videoFilePath = req.file.path;
+
+  try {
+    // 1. Database se is user ka connected YouTube account dhoondein
+    const socialAccount = await SocialAccount.findOne({ user: userId, platform: 'youtube' });
+
+    if (!socialAccount) {
+      // Agar upload fail ho to temporary saved file ko delete karna zaroori hai
+      fs.unlinkSync(videoFilePath); 
+      return res.status(404).json({ 
+        success: false, 
+        message: "No connected YouTube account found. Please connect your channel first." 
+      });
+    }
+
+    // 2. Google OAuth Client ko user ke credentials se set karein
+    oauth2Client.setCredentials({
+      access_token: socialAccount.accessToken,
+      refresh_token: socialAccount.refreshToken
+    });
+
+    // 3. Initialize YouTube API Instance
+    const youtube = google.youtube({ version: 'v3', auth: oauth2Client });
+
+    // 4. Video Upload Payload & Stream Setup
+    const response = await youtube.videos.insert({
+      part: 'snippet,status',
+      requestBody: {
+        snippet: {
+          title: title || "Uploaded via Automation App",
+          description: description || "Video uploaded automatically.",
+          tags: tags ? tags.split(',') : [], // Comma separated tags ko array banayein
+          categoryId: '22' // 22 is for "People & Blogs" (General)
+        },
+        status: {
+          privacyStatus: privacyStatus || 'private', // 'public', 'private', or 'unlisted'
+          selfDeclaredMadeForKids: false
+        }
+      },
+      media: {
+        mimeType: req.file.mimetype,
+        body: fs.createReadStream(videoFilePath) // Video file stream start karein
+      }
+    });
+
+    // 5. Temporary file ko upload hone ke baad server se delete kar dein
+    fs.unlinkSync(videoFilePath);
+
+    return res.status(200).json({
+      success: true,
+      message: "Video uploaded successfully to YouTube!",
+      data: {
+        videoId: response.data.id,
+        videoUrl: `https://www.youtube.com/watch?v=${response.data.id}`,
+        title: response.data.snippet.title
+      }
+    });
+
+  } catch (error) {
+    // Error ki surat mein temporary file delete karein
+    if (fs.existsSync(videoFilePath)) {
+      fs.unlinkSync(videoFilePath);
+    }
+
+    console.error("YouTube Upload Error:", error);
+    return res.status(500).json({
+      success: false,
+      message: "Failed to upload video to YouTube.",
+      error: error.message
+    });
+  }
+};

@@ -3,6 +3,7 @@ import { protectRoute } from "../middlewares/auth.middleware.js";
 import {connectYouTube , youtubeCallback} from "../controllers/youtube.controller.js"
 import {uploadVideo} from '../controllers/youtube.controller.js'
 import multer from "multer";
+import { upload } from '../middlewares/multerMiddleware.js';
 
 
 export const socailMedia = express.Router()
@@ -15,7 +16,7 @@ socailMedia.get("/connect" , protectRoute,connectYouTube)
 socailMedia.get('/callback', youtubeCallback)
 
 // upload video  on youtube
-const upload = multer({ dest: 'uploads/' }); 
+// const upload = multer({ dest: 'uploads/' }); 
 socailMedia.post('/upload', protectRoute, upload.single('video'), uploadVideo)
 
 

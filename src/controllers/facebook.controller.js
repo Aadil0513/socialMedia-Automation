@@ -1,5 +1,5 @@
 import axios from 'axios';
-import User from '../models/User.js';
+import { UserModel } from "../models/user.model.js";
 
 // 1️⃣ Step 1: Facebook OAuth Link Generate Karna
 export const getFacebookAuthUrl = (req, res) => {

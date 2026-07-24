@@ -3,7 +3,6 @@ import { protectRoute } from '../middlewares/auth.middleware.js'; // Aapka Exist
 
 import { getFacebookAuthUrl, facebookCallback} from "../controllers/facebook.controller.js"
 
-import { protectRoute } from "../middlewares/auth.middleware.js"; // Existing common auth middleware
 
 
 const router = express.Router();

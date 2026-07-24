@@ -8,6 +8,7 @@ import { mongoDB } from './config/db.js';
 import { authRoute } from "./routes/auth.routes.js";
 import {profileRoute} from "./routes/profile.route.js"
 import {socailMedia}  from "./routes/soicalMedia.routes.js"
+import facebookRoutes from './routes/facebook.routes.js';
 // Load environment variables
 // dotenv.config();
 
@@ -37,6 +38,7 @@ app.use("/api/v1/auth", authRoute);
 app.use("/api/v1/profile", profileRoute);
 app.use("/api/v1/social",socailMedia)
 app.use("/api/v1/youtube",socailMedia)
+app.use('/api/v1/social', facebookRoutes);
 
 
 app.listen(PORT, () => {

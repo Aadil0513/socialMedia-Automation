@@ -6,12 +6,12 @@ export const getFacebookAuthUrl = (req, res) => {
   const appId = process.env.FACEBOOK_APP_ID;
   const redirectUri = process.env.FACEBOOK_REDIRECT_URI;
   
-  // Facebook Page Connect & Video Upload Permissions
-  const scope = [
+ const scope = [
+    'public_profile',
+    'email',
     'pages_show_list',
     'pages_read_engagement',
-    'pages_manage_posts',
-    'publish_video'
+    'pages_manage_posts'
   ].join(',');
 
   // URL State Parameter Mein User ID Pass Kar Rahe Hain

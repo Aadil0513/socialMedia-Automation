@@ -33,7 +33,6 @@ app.use((err, req, res, next) => {
 });
 
 
-
 app.use("/api/v1/auth", authRoute);
 app.use("/api/v1/profile", profileRoute);
 app.use("/api/v1/social",socailMedia)

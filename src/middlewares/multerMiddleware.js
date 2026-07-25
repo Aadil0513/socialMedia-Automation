@@ -51,21 +51,23 @@ const storage = multer.memoryStorage();
 
 // 2. File Filter (Sirf Images allow karne ke liye)
 const fileFilter = (req, file, cb) => {
-
-
-    // Allowed extensions regex
+  // 1. Allowed extensions regex
   const allowedExtensions = /jpeg|jpg|png|webp|gif|mp4|mov|avi|mkv|webm/;
 
-    // Allowed mimetypes regex
+  // 2. Allowed mimetypes regex
   const allowedMimeTypes = /^image\/(jpeg|jpg|png|webp|gif)$|^video\/(mp4|quicktime|x-msvideo|x-matroska|webm)$/;
 
-  const extname = allowedTypes.test(path.extname(file.originalname).toLowerCase());
-  const mimetype = allowedTypes.test(file.mimetype);
+  // FIX: Sahi variables pass kiye gaye hain
+  const extname = allowedExtensions.test(path.extname(file.originalname).toLowerCase());
+  const mimetype = allowedMimeTypes.test(file.mimetype);
 
   if (extname && mimetype) {
     return cb(null, true);
   } else {
-    cb(new Error("Only image files (jpg, jpeg, png, webp, gif) are allowed!"), false);
+    return cb(
+      new Error("Invalid file type! Only images (jpg, jpeg, png, webp, gif) and videos (mp4, mov, avi, mkv, webm) are allowed!"),
+      false
+    );
   }
 };
 
@@ -73,5 +75,5 @@ const fileFilter = (req, file, cb) => {
 export const upload = multer({
   storage: storage,
   fileFilter: fileFilter,
-  limits: { fileSize: 5 * 1024 * 1024 }, // Max 5MB file limit
+  limits: { fileSize: 100 * 1024 * 1024 }, // 100MB limit (Videos ke liye behtar hai)
 });

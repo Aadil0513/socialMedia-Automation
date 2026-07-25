@@ -51,7 +51,14 @@ const storage = multer.memoryStorage();
 
 // 2. File Filter (Sirf Images allow karne ke liye)
 const fileFilter = (req, file, cb) => {
-  const allowedTypes = /jpeg|jpg|png|webp|gif/;
+
+
+    // Allowed extensions regex
+  const allowedExtensions = /jpeg|jpg|png|webp|gif|mp4|mov|avi|mkv|webm/;
+
+    // Allowed mimetypes regex
+  const allowedMimeTypes = /^image\/(jpeg|jpg|png|webp|gif)$|^video\/(mp4|quicktime|x-msvideo|x-matroska|webm)$/;
+
   const extname = allowedTypes.test(path.extname(file.originalname).toLowerCase());
   const mimetype = allowedTypes.test(file.mimetype);
 

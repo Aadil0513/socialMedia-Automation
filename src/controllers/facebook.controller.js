@@ -101,7 +101,7 @@ export const createFacebookPost = async (req, res) => {
     }
 
     // A. Fetch User & Facebook Page Access Token from DB
-    const user = await User.findById(userId);
+    const user = await UserModel.findById(userId);
     if (!user || !user.isFacebookConnected || !user.facebookAccessToken) {
       return res.status(400).json({ success: false, message: "Facebook page is not connected." });
     }

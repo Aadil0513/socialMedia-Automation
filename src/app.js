@@ -38,7 +38,7 @@ app.use("/api/v1/auth", authRoute);
 app.use("/api/v1/profile", profileRoute);
 app.use("/api/v1/social",socailMedia)
 app.use("/api/v1/youtube",socailMedia)
-app.use('/api/v1/social', facebookRoutes);
+app.use('/api/v1/auth', facebookRoutes);
 
 
 app.listen(PORT, () => {

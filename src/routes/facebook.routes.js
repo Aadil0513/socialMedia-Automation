@@ -14,3 +14,7 @@ router.get('/facebook/connect', protectRoute, getFacebookAuthUrl);
 router.get('/facebook/callback', facebookCallback);
 
 export default router;  
+
+// https://social-media-automation-woad.vercel.app/api/v1/social/facebook/callback
+
+// app.use('/api/v1/social', facebookRoutes);

@@ -1,6 +1,7 @@
 import axios from 'axios';
-import { UserModel } from "../models/user.model.js";
+// import { UserModel } from "../models/user.model.js";
 import { uploadBufferToCloudinary } from '../config/cloudinary.js';
+import { SocialAccount } from '../models/socialAccount.model.js'; // Named import
 
 // 1️⃣ Step 1: Facebook OAuth Link Generate Karna
 export const getFacebookAuthUrl = (req, res) => {
@@ -87,62 +88,69 @@ export const facebookCallback = async (req, res) => {
 
 ;
 
+
+
+
 export const createFacebookPost = async (req, res) => {
   try {
-    
-
-    
-    const userId = req.user._id; // Auth middleware se mila user ID
+    const userId = req.user._id || req.user.id;
     const { caption } = req.body;
     const file = req.file;
 
+    // 1. File Validation
     if (!file) {
-      return res.status(400).json({ success: false, message: "Please upload an image or video file." });
+      return res.status(400).json({ 
+        success: false, 
+        message: "Please select an image or video to post." 
+      });
     }
 
-    // A. Fetch User & Facebook Page Access Token from DB
-    const user = await UserModel.findById(userId);
-    if (!user || !user.isFacebookConnected || !user.facebookAccessToken) {
-      return res.status(400).json({ success: false, message: "Facebook page is not connected." });
+    // 2. Fetch Facebook Account from SocialAccount Schema
+    const fbAccount = await SocialAccount.findOne({ 
+      user: userId, 
+      platform: "facebook" 
+    });
+
+    if (!fbAccount || !fbAccount.accessToken || !fbAccount.platformAccountId) {
+      return res.status(400).json({ 
+        success: false, 
+        message: "Facebook page is not connected. Please connect Facebook first." 
+      });
     }
 
-   
-
-    // B. Upload Memory Buffer to Cloudinary
+    // 3. Upload File Buffer to Cloudinary
     const cloudinaryResult = await uploadBufferToCloudinary(file.buffer, file.mimetype);
-    const mediaUrl = cloudinaryResult.secure_url; // Public HTTP URL
+    const mediaUrl = cloudinaryResult.secure_url;
 
     const isVideo = file.mimetype.startsWith('video');
     let fbResponse;
 
-    // C. Post to Facebook Graph API
+    // 4. Hit Meta Graph API
     if (isVideo) {
-      // Post Video to Facebook Page
       fbResponse = await axios.post(
-        `https://graph.facebook.com/v19.0/${user.facebookPageId}/videos`,
+        `https://graph.facebook.com/v19.0/${fbAccount.platformAccountId}/videos`,
         {
           file_url: mediaUrl,
           description: caption || '',
-          access_token: user.facebookAccessToken
+          access_token: fbAccount.accessToken
         }
       );
     } else {
-      // Post Photo/Image to Facebook Page
       fbResponse = await axios.post(
-        `https://graph.facebook.com/v19.0/${user.facebookPageId}/photos`,
+        `https://graph.facebook.com/v19.0/${fbAccount.platformAccountId}/photos`,
         {
           url: mediaUrl,
           caption: caption || '',
-          access_token: user.facebookAccessToken
+          access_token: fbAccount.accessToken
         }
       );
     }
 
     return res.status(200).json({
       success: true,
-      message: `${isVideo ? 'Video' : 'Image'} posted successfully to Facebook!`,
+      message: `${isVideo ? 'Video' : 'Image'} posted successfully to Facebook Page!`,
       facebookPostId: fbResponse.data.id,
-      cloudinaryUrl: mediaUrl
+      mediaUrl: mediaUrl
     });
 
   } catch (error) {

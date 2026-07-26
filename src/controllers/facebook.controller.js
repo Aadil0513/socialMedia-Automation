@@ -30,10 +30,10 @@ export const facebookCallback = async (req, res) => {
     const { code, state: userId } = req.query;
 
     if (!code) {
-      return res.status(400).send("Facebook authorization failed or denied.");
+      return res.status(400).json({ success: false, message: "Authorization code missing." });
     }
 
-    // A. Code ko Exchange karke Short-Lived Access Token haasil karein
+    // 1. Exchange Short-lived Token
     const tokenRes = await axios.get('https://graph.facebook.com/v19.0/oauth/access_token', {
       params: {
         client_id: process.env.FACEBOOK_APP_ID,
@@ -45,7 +45,7 @@ export const facebookCallback = async (req, res) => {
 
     const shortLivedToken = tokenRes.data.access_token;
 
-    // B. Short-Lived Token ko Long-Lived Token (60 Days Validity) mein convert karein
+    // 2. Exchange Long-lived Token
     const longLivedRes = await axios.get('https://graph.facebook.com/v19.0/oauth/access_token', {
       params: {
         grant_type: 'fb_exchange_token',
@@ -57,36 +57,52 @@ export const facebookCallback = async (req, res) => {
 
     const longLivedUserToken = longLivedRes.data.access_token;
 
-    // C. User ke Managed Facebook Pages Fetch Karein
+    // 3. Fetch Managed Facebook Pages
     const pagesRes = await axios.get(`https://graph.facebook.com/v19.0/me/accounts?access_token=${longLivedUserToken}`);
-    
     const pages = pagesRes.data.data;
+
     if (!pages || pages.length === 0) {
-      return res.status(404).send("No Facebook Pages found associated with this account.");
+      return res.status(404).json({
+        success: false,
+        message: "No Facebook Pages found. Please create a Facebook Page first."
+      });
     }
 
-    // D. Primary Page ka ID aur Page Access Token Select Karein
     const primaryPage = pages[0];
 
-    // E. Database Update via Mongoose
-    await User.findByIdAndUpdate(userId, {
-      facebookPageId: primaryPage.id,
-      facebookAccessToken: primaryPage.access_token,
-      isFacebookConnected: true
-    });
+    // 4. Save/Update in SocialAccount Collection
+    const savedAccount = await SocialAccount.findOneAndUpdate(
+      { user: userId, platform: 'facebook' },
+      {
+        user: userId,
+        platform: 'facebook',
+        platformAccountId: primaryPage.id,     // Page ID
+        accountName: primaryPage.name,          // Page Name
+        accessToken: primaryPage.access_token,  // Page Access Token
+      },
+      { upsert: true, new: true }
+    );
 
-    // F. Success hone par Frontend par Redirect Karein
-    return res.redirect(`${process.env.FRONTEND_URL}/dashboard/socials?status=success`);
+    // 🎯 Direct Response Screen (No Frontend Required!)
+    return res.status(200).json({
+      success: true,
+      message: "Facebook account connected and saved to DB successfully!",
+      connectedAccount: savedAccount
+    });
 
   } catch (error) {
     console.error("Facebook Connect Error:", error.response?.data || error.message);
-    return res.redirect(`${process.env.FRONTEND_URL}/dashboard/socials?status=error`);
+    return res.status(500).json({
+      success: false,
+      message: "Failed to connect Facebook",
+      error: error.response?.data || error.message
+    });
   }
 };
 
 
 
-;
+
 
 
 

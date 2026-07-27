@@ -15,8 +15,9 @@ const scope = [
   'pages_manage_posts'
 ].join(',');
 
-  // URL State Parameter Mein User ID Pass Kar Rahe Hain
-  const authUrl = `https://www.facebook.com/v19.0/dialog/oauth?client_id=${appId}&redirect_uri=${encodeURIComponent(redirectUri)}&scope=${scope}&response_type=code&state=${req.user._id}`;
+
+// 💥 ADDED: auth_type=rerequest (forces account selection/re-auth)
+  const authUrl = `https://www.facebook.com/v19.0/dialog/oauth?client_id=${appId}&redirect_uri=${encodeURIComponent(redirectUri)}&scope=${scope}&auth_type=rerequest&response_type=code&state=${req.user._id}`;
 
   return res.status(200).json({ 
     success: true, 
